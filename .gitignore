@@ -1,0 +1,30 @@
+*.iml
+.gradle
+.idea
+.kotlin
+.fleet
+.vscode
+.vs
+.DS_Store
+build
+captures
+.externalNativeBuild
+.cxx
+local.properties
+xcuserdata
+signingKey.properties
+google-services.json
+*.apk
+*.aab
+*.jks
+*.pepk
+/export_project.ps1
+/project_export.txt
+
+# Firebase service account (contains private keys!)
+config/firebase-service-account.json
+
+# Keys and secrets
+keys.properties
+*.key
+*.pem

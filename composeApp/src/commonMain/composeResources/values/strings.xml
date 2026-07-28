@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AlcoDbOptimizer</string>
+
+    <string name="start_scan">Start Scan</string>
+    <string name="continue_scan">Continue Scan</string>
+    <string name="stop">Stop</string>
+    <string name="scanning">Scanning...</string>
+
+    <string name="collections_format">Collections: %1$d/%2$d</string>
+    <string name="reads_format">Reads used: %1$d/%2$d (daily limit)</string>
+    <string name="read_limit_label">Read limit:</string>
+
+    <string name="press_start_scan">Press 'Start Scan' to find inactive users</string>
+    <string name="scanning_database">Scanning database...</string>
+    <string name="no_inactive_users">No inactive users found</string>
+
+    <string name="inactive_users_count">Inactive Users (%1$d)</string>
+
+    <string name="delete_all_title">Delete All Inactive Users</string>
+    <string name="delete_all_message">Are you sure you want to delete %1$d inactive users? A backup will be created before deletion.</string>
+    <string name="delete_all">Delete All</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="delete_user_title">Delete User</string>
+    <string name="delete_user_message">Are you sure you want to delete user %1$s? A backup will be created before deletion.</string>
+    <string name="delete">Delete</string>
+
+    <string name="daily_limit_reached">Daily read limit reached (%1$d). Try again tomorrow.</string>
+    <string name="scan_complete">Scan complete. Found %1$d inactive users.</string>
+    <string name="all_deleted">All inactive users deleted.</string>
+    <string name="user_deleted">User %1$s deleted.</string>
+    <string name="firebase_initialized">Firebase initialized successfully.</string>
+    <string name="firebase_init_failed">Failed to initialize Firebase.</string>
+    <string name="firebase_not_initialized">Firebase not initialized</string>
+
+    <string name="anonymous">Anonymous</string>
+    <string name="registered">Registered</string>
+    <string name="anonymous_user">Anonymous User</string>
+    <string name="registered_user">Registered User</string>
+    <string name="last_drink">Last drink: %1$s</string>
+    <string name="days">days</string>
+    <string name="total_days">Total Days</string>
+    <string name="drink_days">Drink Days</string>
+    <string name="last_drink_date">Last Drink Date</string>
+    <string name="show_all_dates">Show All Dates</string>
+    <string name="hide_all_dates">Hide All Dates</string>
+    <string name="close">Close</string>
+    <string name="reset_counter">Reset Counter</string>
+    <string name="reset_all">Reset All</string>
+    <string name="deleting">Deleting...</string>
+    <string name="deleting_progress">Deleted: %1$d / %2$d</string>
+    <string name="restore">Restore</string>
+    <string name="restore_title">Restore from Backup</string>
+    <string name="restore_filter_hint">Filter by user id...</string>
+    <string name="restore_select_user">Select a user to restore</string>
+    <string name="restore_confirm">Restore</string>
+    <string name="restore_complete">User %1$s restored successfully.</string>
+    <string name="restore_no_backups">No backups found</string>
+    <string name="restore_deleted_at">Deleted: %1$s</string>
+    <string name="restore_drink_days">Drink days: %1$d</string>
+    <string name="restore_last_drink">Last drink: %1$s</string>
+    <string name="restoring">Restoring...</string>
+    <string name="actualize">Actualize</string>
+    <string name="actualize_title">Actualize User Registry</string>
+    <string name="actualize_hint">Filter by email...</string>
+    <string name="actualize_description">Users in registry but without a database collection:</string>
+    <string name="actualize_remove_all">Remove All</string>
+    <string name="actualize_remove_single">Remove</string>
+    <string name="actualize_complete">Removed %1$d orphaned registry user(s).</string>
+    <string name="actualize_no_orphans">No orphaned users found</string>
+    <string name="actualize_searching">Searching...</string>
+    <string name="actualize_orphan_count">Orphaned: %1$d of %2$d</string>
+</resources>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AlcoDbOptimizer</string>
+
+    <string name="start_scan">Начать сканирование</string>
+    <string name="continue_scan">Продолжить сканирование</string>
+    <string name="stop">Остановить</string>
+    <string name="scanning">Сканирование...</string>
+
+    <string name="collections_format">Коллекции: %1$d/%2$d</string>
+    <string name="reads_format">Использовано чтений: %1$d/%2$d (дневной лимит)</string>
+    <string name="read_limit_label">Лимит чтений:</string>
+
+    <string name="press_start_scan">Нажмите «Начать сканирование» для поиска неактивных пользователей</string>
+    <string name="scanning_database">Сканирование базы данных...</string>
+    <string name="no_inactive_users">Неактивные пользователи не найдены</string>
+
+    <string name="inactive_users_count">Неактивные пользователи (%1$d)</string>
+
+    <string name="delete_all_title">Удалить всех неактивных пользователей</string>
+    <string name="delete_all_message">Вы уверены, что хотите удалить %1$d неактивных пользователей? Бэкап будет создан перед удалением.</string>
+    <string name="delete_all">Удалить всех</string>
+    <string name="cancel">Отмена</string>
+
+    <string name="delete_user_title">Удалить пользователя</string>
+    <string name="delete_user_message">Вы уверены, что хотите удалить пользователя %1$s? Бэкап будет создан перед удалением.</string>
+    <string name="delete">Удалить</string>
+
+    <string name="daily_limit_reached">Дневной лимит чтений достигнут (%1$d). Попробуйте завтра.</string>
+    <string name="scan_complete">Сканирование завершено. Найдено %1$d неактивных пользователей.</string>
+    <string name="all_deleted">Все неактивные пользователи удалены.</string>
+    <string name="user_deleted">Пользователь %1$s удалён.</string>
+    <string name="firebase_initialized">Firebase успешно инициализирован.</string>
+    <string name="firebase_init_failed">Ошибка инициализации Firebase.</string>
+    <string name="firebase_not_initialized">Firebase не инициализирован</string>
+
+    <string name="anonymous">Анонимный</string>
+    <string name="registered">Зарегистрированный</string>
+    <string name="anonymous_user">Анонимный пользователь</string>
+    <string name="registered_user">Зарегистрированный пользователь</string>
+    <string name="last_drink">Последнее употребление: %1$s</string>
+    <string name="days">дней</string>
+    <string name="total_days">Всего дней</string>
+    <string name="drink_days">Дней с выпивкой</string>
+    <string name="last_drink_date">Дата последнего употребления</string>
+    <string name="show_all_dates">Показать все даты</string>
+    <string name="hide_all_dates">Скрыть все даты</string>
+    <string name="close">Закрыть</string>
+    <string name="reset_counter">Сбросить счётчик</string>
+    <string name="reset_all">Сбросить всё</string>
+    <string name="deleting">Удаление...</string>
+    <string name="deleting_progress">Удалено: %1$d / %2$d</string>
+    <string name="restore">Восстановить</string>
+    <string name="restore_title">Восстановление из бэкапа</string>
+    <string name="restore_filter_hint">Фильтр по id пользователя...</string>
+    <string name="restore_select_user">Выберите пользователя для восстановления</string>
+    <string name="restore_confirm">Восстановить</string>
+    <string name="restore_complete">Пользователь %1$s восстановлен.</string>
+    <string name="restore_no_backups">Бэкапы не найдены</string>
+    <string name="restore_deleted_at">Удалён: %1$s</string>
+    <string name="restore_drink_days">Дней с выпивкой: %1$d</string>
+    <string name="restore_last_drink">Последнее употребление: %1$s</string>
+    <string name="restoring">Восстановление...</string>
+    <string name="actualize">Актуализировать</string>
+    <string name="actualize_title">Актуализация реестра пользователей</string>
+    <string name="actualize_hint">Фильтр по email...</string>
+    <string name="actualize_description">Пользователи в реестре, но без коллекции в базе:</string>
+    <string name="actualize_remove_all">Удалить всех</string>
+    <string name="actualize_remove_single">Удалить</string>
+    <string name="actualize_complete">Удалено %1$d записей из реестра.</string>
+    <string name="actualize_no_orphans">Осиротевшие записи не найдены</string>
+    <string name="actualize_searching">Поиск...</string>
+    <string name="actualize_orphan_count">Осиротевших: %1$d из %2$d</string>
+</resources>
