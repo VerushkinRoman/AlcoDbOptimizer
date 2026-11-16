@@ -1,0 +1,40 @@
+complexity:
+  active: true
+  LargeClass:
+    active: true
+    allowedLines: 400
+    excludes: ['**/commonTest/**', '**/jvmTest/**', '**/androidHostTest/**']
+  TooManyFunctions:
+    active: true
+    allowedFunctionsPerFile: 30
+    allowedFunctionsPerClass: 20
+    allowedFunctionsPerInterface: 15
+    allowedFunctionsPerObject: 20
+    ignoreDeprecated: true
+    ignoreOverridden: true
+    excludes: ['**/commonTest/**', '**/jvmTest/**', '**/androidHostTest/**']
+
+style:
+  UnnecessaryFullyQualifiedName:
+    active: true
+    ignoredFullyQualifiedNames: []
+  UnusedImport:
+    active: true
+  UnusedParameter:
+    active: true
+  UnusedPrivateClass:
+    active: true
+  UnusedPrivateFunction:
+    active: true
+  UnusedPrivateProperty:
+    active: true
+  UnusedVariable:
+    active: true
+
+performance:
+  UnnecessaryTypeCasting:
+    active: true
+
+potential-bugs:
+  Deprecation:
+    active: true

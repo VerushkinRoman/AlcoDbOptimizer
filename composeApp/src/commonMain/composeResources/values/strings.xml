@@ -32,7 +32,12 @@
     <string name="user_deleted">User %1$s deleted.</string>
     <string name="firebase_initialized">Firebase initialized successfully.</string>
     <string name="firebase_init_failed">Failed to initialize Firebase.</string>
+    <string name="error_firebase_not_initialized">Firebase not initialized</string>
+    <string name="error_unknown">Unknown error</string>
     <string name="firebase_not_initialized">Firebase not initialized</string>
+
+    <string name="value_unknown">Unknown</string>
+    <string name="value_not_available">N/A</string>
 
     <string name="anonymous">Anonymous</string>
     <string name="registered">Registered</string>
@@ -71,4 +76,43 @@
     <string name="actualize_no_orphans">No orphaned users found</string>
     <string name="actualize_searching">Searching...</string>
     <string name="actualize_orphan_count">Orphaned: %1$d of %2$d</string>
+    <string name="filter_registered">Registered</string>
+    <string name="auth_check">Auth Check</string>
+    <string name="auth_check_title">Auth Users Without Collections</string>
+    <string name="auth_check_hint">Filter by email...</string>
+    <string name="auth_check_description">Firebase Auth users without a database collection:</string>
+    <string name="auth_check_searching">Loading auth users...</string>
+    <string name="auth_check_no_orphans">No orphaned auth users found</string>
+    <string name="auth_check_remove_all">Delete All Orphaned Auth Users</string>
+    <string name="auth_check_remove_single">Delete Auth</string>
+    <string name="auth_check_complete">Deleted %1$d orphaned auth user(s).</string>
+    <string name="auth_check_orphan_count">Orphaned auth users: %1$d</string>
+
+    <string name="lost_search">Lost Data Search</string>
+    <string name="lost_search_title">Lost Data Search</string>
+    <string name="lost_search_start">Calendar start</string>
+    <string name="lost_search_end">Calendar end</string>
+    <string name="lost_search_pick_date">Pick date</string>
+    <string name="lost_search_exact">Exact</string>
+    <string name="lost_search_approx">Approximate</string>
+    <string name="lost_search_months">± %1$d mo.</string>
+    <string name="lost_search_months_title">Approximation</string>
+    <string name="lost_search_months_description">How many months of discrepancy are allowed?</string>
+    <string name="lost_search_months_hint">Months</string>
+    <string name="lost_search_ok">OK</string>
+    <string name="lost_search_days">Dates that must be present</string>
+    <string name="lost_search_add_date">Add date</string>
+    <string name="lost_search_days_tolerance">± days</string>
+    <string name="lost_search_many">Many</string>
+    <string name="lost_search_half">Half</string>
+    <string name="lost_search_run">Search</string>
+    <string name="lost_search_running">Searching...</string>
+    <string name="lost_search_progress">Checked: %1$d / %2$d</string>
+    <string name="lost_search_found">Found collections: %1$d</string>
+    <string name="lost_search_no_results">No matching collections found</string>
+    <string name="lost_search_limit">Read limit reached, not all collections were checked</string>
+    <string name="lost_search_close">Close</string>
+    <string name="lost_search_range">%1$s — %2$s</string>
+    <string name="lost_search_counts">Days: %1$d, drinks: %2$d</string>
+    <string name="lost_search_remove_date">Remove date</string>
 </resources>

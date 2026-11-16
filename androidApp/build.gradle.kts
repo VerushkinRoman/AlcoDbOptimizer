@@ -1,5 +1,4 @@
 import com.android.build.api.dsl.ApplicationExtension
-import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -40,6 +39,25 @@ configure<ApplicationExtension> {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    packaging {
+        resources {
+            // firebase-admin (via composeApp) brings server metadata that conflicts on Android.
+            excludes += "/META-INF/INDEX.LIST"
+            excludes += "/META-INF/io.netty.versions.properties"
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/DEPENDENCIES"
+            excludes += "/META-INF/LICENSE*"
+            excludes += "/META-INF/NOTICE*"
+        }
+    }
+
+    testOptions {
+        unitTests {
+            // Compose Preview runfiles need compiled Android resources (AGP 9.5+).
+            isIncludeAndroidResources = true
+        }
     }
 }
 

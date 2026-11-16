@@ -1,4 +1,6 @@
 import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
+import dev.detekt.gradle.Detekt
+import dev.detekt.gradle.DetektCreateBaselineTask
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
@@ -8,6 +10,33 @@ plugins {
     alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.detekt)
+}
+
+detekt {
+    toolVersion = libs.versions.detekt.get()
+    parallel = true
+    buildUponDefaultConfig = false
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    ignoreFailures = false
+}
+
+// Один общий baseline на все задачи анализа: записи — это «правило + FQN»,
+// они не зависят от source set'а и строки, поэтому commonMain-задача пишет файл,
+// а остальные читают тот же самый.
+val detektBaselineFile = rootProject.file("config/detekt/detekt-baseline.xml")
+
+tasks.withType<Detekt>().configureEach {
+    exclude { it.file.invariantSeparatorsPath.contains("/build/generated/") }
+    baseline.set(detektBaselineFile)
+}
+
+tasks.withType<DetektCreateBaselineTask>().configureEach {
+    baseline.set(detektBaselineFile)
+}
+
+tasks.named<Detekt>("detekt") {
+    dependsOn(tasks.withType<Detekt>().matching { it.name != "detekt" })
 }
 
 kotlin {
@@ -18,7 +47,7 @@ kotlin {
 
 private fun KotlinMultiplatformExtension.configureDependencies() {
     sourceSets {
-        val jvmSharedMain by creating {
+        val jvmSharedMain = create("jvmSharedMain") {
             dependsOn(commonMain.get())
         }
         jvmMain.get().dependsOn(jvmSharedMain)
@@ -36,6 +65,7 @@ private fun KotlinMultiplatformExtension.configureDependencies() {
             implementation(libs.kodein.compose)
 
             implementation(libs.lifecycle.viewmodel)
+            implementation(libs.lifecycle.runtime.compose)
 
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)

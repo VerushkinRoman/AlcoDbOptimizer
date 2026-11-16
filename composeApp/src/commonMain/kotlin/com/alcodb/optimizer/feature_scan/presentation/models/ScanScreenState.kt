@@ -1,8 +1,13 @@
 package com.alcodb.optimizer.feature_scan.presentation.models
 
 import com.alcodb.optimizer.feature_scan.domain.models.BackupEntry
+import com.alcodb.optimizer.feature_scan.domain.models.ExpectedDay
+import com.alcodb.optimizer.feature_scan.domain.models.FoundCollection
 import com.alcodb.optimizer.feature_scan.domain.models.InactiveUser
 import com.alcodb.optimizer.feature_scan.domain.models.OrphanedRegistryUser
+import kotlinx.datetime.LocalDate
+
+enum class LostSearchDateTarget { Start, End, New }
 
 data class ScanScreenState(
     val inactiveUsers: List<InactiveUser> = emptyList(),
@@ -16,6 +21,7 @@ data class ScanScreenState(
     val maxReads: Int = 1000,
     val readLimit: Int = 1000,
     val selectedUser: InactiveUser? = null,
+    val showAllDatesInUserDetail: Boolean = false,
     val isDeleteAllConfirmVisible: Boolean = false,
     val isDeleteSingleConfirmVisible: Boolean = false,
     val isInitializingFirebase: Boolean = true,
@@ -34,4 +40,28 @@ data class ScanScreenState(
     val totalRegistryUsers: Int = 0,
     val actualizeFilter: String = "",
     val isRemovingOrphans: Boolean = false,
+    val showOnlyRegistered: Boolean = false,
+    val isAuthOrphanDialogVisible: Boolean = false,
+    val isCheckingAuthOrphans: Boolean = false,
+    val authOrphanEmails: List<String> = emptyList(),
+    val authOrphanFilter: String = "",
+    val isDeletingAuthOrphans: Boolean = false,
+    val isLostSearchDialogVisible: Boolean = false,
+    val lostSearchStartDate: LocalDate? = null,
+    val lostSearchStartExact: Boolean = true,
+    val lostSearchStartMonths: Int = 1,
+    val lostSearchEndDate: LocalDate? = null,
+    val lostSearchEndExact: Boolean = true,
+    val lostSearchEndMonths: Int = 1,
+    val lostSearchExpectedDays: List<ExpectedDay> = emptyList(),
+    val isLostSearchRunning: Boolean = false,
+    val lostSearchChecked: Int = 0,
+    val lostSearchTotal: Int = 0,
+    val lostSearchResults: List<FoundCollection> = emptyList(),
+    val lostSearchStoppedByLimit: Boolean = false,
+    val lostSearchHasRun: Boolean = false,
+    val isLostSearchMonthsDialogVisible: Boolean = false,
+    val lostSearchMonthsDialogForStart: Boolean = true,
+    val lostSearchMonthsInput: String = "",
+    val lostSearchDatePickerTarget: LostSearchDateTarget? = null,
 )

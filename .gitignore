@@ -20,6 +20,7 @@ google-services.json
 *.pepk
 /export_project.ps1
 /project_export.txt
+/
 
 # Firebase service account (contains private keys!)
 config/firebase-service-account.json
@@ -28,3 +29,6 @@ config/firebase-service-account.json
 keys.properties
 *.key
 *.pem
+/composeApp/backups/
+/composeApp/data/
+/gradle/wrapper/gradle-wrapper.properties

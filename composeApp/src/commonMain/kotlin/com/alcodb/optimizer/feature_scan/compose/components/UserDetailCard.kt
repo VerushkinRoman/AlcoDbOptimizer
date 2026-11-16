@@ -33,10 +33,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -44,17 +40,18 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.alcodb.optimizer.feature_scan.domain.models.InactiveUser
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.number
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun UserDetailCard(
     user: InactiveUser,
+    showAllDates: Boolean,
+    onToggleAllDates: () -> Unit,
     onDeleteClick: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var showAllDates by remember { mutableStateOf(false) }
-
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -113,7 +110,10 @@ fun UserDetailCard(
             ) {
                 StatItem(stringResource(Res.string.total_days), "${user.totalDays}")
                 StatItem(stringResource(Res.string.drink_days), "${user.drinkDays}")
-                StatItem(stringResource(Res.string.last_drink_date), formatDate(user.lastDrinkDate))
+                StatItem(
+                    stringResource(Res.string.last_drink_date),
+                    formatDate(user.lastDrinkDate) ?: stringResource(Res.string.value_unknown),
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -135,7 +135,7 @@ fun UserDetailCard(
                         color = MaterialTheme.colorScheme.onErrorContainer,
                     )
                     Text(
-                        text = formatDate(user.lastDrinkDate),
+                        text = formatDate(user.lastDrinkDate) ?: stringResource(Res.string.value_unknown),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onErrorContainer,
@@ -149,7 +149,7 @@ fun UserDetailCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showAllDates = !showAllDates }
+                    .clickable(onClick = onToggleAllDates)
                     .padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -187,7 +187,7 @@ fun UserDetailCard(
                                 style = MaterialTheme.typography.bodySmall,
                             )
                             Text(
-                                text = formatDate(entry.value),
+                                text = formatDate(entry.value) ?: stringResource(Res.string.value_unknown),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.error,
                             )
@@ -253,11 +253,11 @@ private fun StatItem(
     }
 }
 
-private fun formatDate(epochDays: Long): String {
+private fun formatDate(epochDays: Long): String? {
     return try {
         val date = LocalDate.fromEpochDays(epochDays.toInt())
-        "${date.dayOfMonth}.${date.monthNumber}.${date.year}"
+        "${date.day}.${date.month.number}.${date.year}"
     } catch (_: Exception) {
-        "Unknown"
+        null
     }
 }

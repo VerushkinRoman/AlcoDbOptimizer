@@ -1,6 +1,5 @@
 package com.alcodb.optimizer.common.data.di
 
-import com.alcodb.optimizer.common.data.datasource.FirestoreDataSource
 import com.alcodb.optimizer.common.data.datasource.LocalStorageDataSource
 import com.alcodb.optimizer.common.data.datasource.LocalStorageDataSourceImpl
 import com.russhwolf.settings.Settings

@@ -8,6 +8,7 @@ import androidx.compose.ui.window.rememberWindowState
 import com.alcodb.optimizer.common.compose.AlcoDbOptimizerApp
 import com.alcodb.optimizer.common.core.platform.PlatformConfiguration
 import com.alcodb.optimizer.common.core.platform.PlatformSDK
+import java.io.File
 
 fun main() = application {
     PlatformSDK.init(
@@ -42,7 +43,7 @@ private fun resolveFirebaseConfig(): String {
     )
 
     for (path in configPaths) {
-        val file = java.io.File(path)
+        val file = File(path)
         if (file.exists()) {
             return file.absolutePath
         }

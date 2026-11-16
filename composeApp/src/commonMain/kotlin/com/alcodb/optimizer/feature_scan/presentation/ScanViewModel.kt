@@ -1,26 +1,32 @@
 package com.alcodb.optimizer.feature_scan.presentation
 
-import com.alcodb.optimizer.common.domain.utils.Dispatchers
+import com.alcodb.optimizer.common.domain.utils.Error
 import com.alcodb.optimizer.common.domain.utils.onError
 import com.alcodb.optimizer.common.domain.utils.onSuccess
 import com.alcodb.optimizer.common.presentation.utils.BaseSharedViewModel
 import com.alcodb.optimizer.feature_scan.domain.models.BackupEntry
-import com.alcodb.optimizer.feature_scan.domain.models.InactiveUser
-import com.alcodb.optimizer.feature_scan.domain.models.OrphanedRegistryUser
 import com.alcodb.optimizer.feature_scan.domain.repository.ScanRepository
 import com.alcodb.optimizer.feature_scan.domain.utils.ScanError
+import com.alcodb.optimizer.feature_scan.presentation.coordinators.AuthCleanupCoordinator
+import com.alcodb.optimizer.feature_scan.presentation.coordinators.LostSearchCoordinator
+import com.alcodb.optimizer.feature_scan.presentation.coordinators.RegistryCleanupCoordinator
+import com.alcodb.optimizer.feature_scan.presentation.coordinators.RestoreCoordinator
 import com.alcodb.optimizer.feature_scan.presentation.models.ScanScreenAction
-import com.alcodb.optimizer.feature_scan.presentation.models.ScanScreenState
 import com.alcodb.optimizer.feature_scan.presentation.models.ScanScreenEvent
+import com.alcodb.optimizer.feature_scan.presentation.models.ScanScreenState
 import kotlinx.coroutines.flow.collectLatest
 
 class ScanViewModel(
     private val scanRepository: ScanRepository,
-    private val dispatchers: Dispatchers,
     private val initFirebase: suspend () -> Unit,
 ) : BaseSharedViewModel<ScanScreenState, ScanScreenAction, ScanScreenEvent>(
     initialState = ScanScreenState()
 ) {
+    private val lostSearch = LostSearchCoordinator(scanRepository)
+    private val restore = RestoreCoordinator(scanRepository)
+    private val registryCleanup = RegistryCleanupCoordinator(scanRepository)
+    private val authCleanup = AuthCleanupCoordinator(scanRepository)
+
     init {
         loadSavedData()
     }
@@ -31,27 +37,101 @@ class ScanViewModel(
             ScanScreenEvent.OnInitFirebase -> onInitFirebase()
             ScanScreenEvent.OnStartScan -> onStartScan()
             ScanScreenEvent.OnStopScan -> onStopScan()
-            ScanScreenEvent.OnDeleteAllClick -> onDeleteAllClick()
+            ScanScreenEvent.OnDeleteAllClick ->
+                viewState = viewState.copy(isDeleteAllConfirmVisible = true)
             ScanScreenEvent.OnDeleteAllConfirm -> onDeleteAllConfirm()
-            ScanScreenEvent.OnDeleteAllDismiss -> onDeleteAllDismiss()
-            is ScanScreenEvent.OnUserClick -> onUserClick(viewEvent.user)
-            ScanScreenEvent.OnUserDetailDismiss -> onUserDetailDismiss()
-            ScanScreenEvent.OnDeleteSingleUserClick -> onDeleteSingleUserClick()
+            ScanScreenEvent.OnDeleteAllDismiss ->
+                viewState = viewState.copy(isDeleteAllConfirmVisible = false)
+            is ScanScreenEvent.OnUserClick -> viewState = viewState.copy(
+                selectedUser = viewEvent.user,
+                showAllDatesInUserDetail = false,
+            )
+            ScanScreenEvent.OnUserDetailDismiss -> viewState = viewState.copy(
+                selectedUser = null,
+                showAllDatesInUserDetail = false,
+            )
+            ScanScreenEvent.OnUserDetailToggleAllDates -> viewState = viewState.copy(
+                showAllDatesInUserDetail = !viewState.showAllDatesInUserDetail,
+            )
+            ScanScreenEvent.OnDeleteSingleUserClick ->
+                viewState = viewState.copy(isDeleteSingleConfirmVisible = true)
             ScanScreenEvent.OnDeleteSingleConfirm -> onDeleteSingleConfirm()
-            ScanScreenEvent.OnDeleteSingleDismiss -> onDeleteSingleDismiss()
-            is ScanScreenEvent.OnReadLimitChanged -> onReadLimitChanged(viewEvent.limit)
+            ScanScreenEvent.OnDeleteSingleDismiss ->
+                viewState = viewState.copy(isDeleteSingleConfirmVisible = false)
+            is ScanScreenEvent.OnReadLimitChanged ->
+                viewState = viewState.copy(readLimit = viewEvent.limit.coerceAtLeast(1))
             ScanScreenEvent.OnResetCounter -> onResetCounter()
             ScanScreenEvent.OnResetAll -> onResetAll()
-            ScanScreenEvent.OnRestoreClick -> onRestoreClick()
-            ScanScreenEvent.OnRestoreDismiss -> onRestoreDismiss()
-            is ScanScreenEvent.OnRestoreFilterChanged -> onRestoreFilterChanged(viewEvent.filter)
-            is ScanScreenEvent.OnRestoreSelectEntry -> onRestoreSelectEntry(viewEvent.entry)
-            ScanScreenEvent.OnRestoreConfirm -> onRestoreConfirm()
-            ScanScreenEvent.OnActualizeClick -> onActualizeClick()
-            ScanScreenEvent.OnActualizeDismiss -> onActualizeDismiss()
-            is ScanScreenEvent.OnActualizeFilterChanged -> onActualizeFilterChanged(viewEvent.filter)
-            ScanScreenEvent.OnActualizeRemoveAll -> onActualizeRemoveAll()
-            is ScanScreenEvent.OnActualizeRemoveSingle -> onActualizeRemoveSingle(viewEvent.user)
+            ScanScreenEvent.OnToggleRegisteredOnly ->
+                viewState = viewState.copy(showOnlyRegistered = !viewState.showOnlyRegistered)
+
+            ScanScreenEvent.OnRestoreClick -> loadBackupEntries()
+            ScanScreenEvent.OnRestoreDismiss -> viewState = restore.dismiss(viewState)
+            is ScanScreenEvent.OnRestoreFilterChanged ->
+                viewState = restore.filterChanged(viewState, viewEvent.filter)
+            is ScanScreenEvent.OnRestoreSelectEntry ->
+                viewState = restore.selectEntry(viewState, viewEvent.entry)
+            ScanScreenEvent.OnRestoreConfirm -> confirmRestore()
+
+            ScanScreenEvent.OnActualizeClick -> loadOrphanedRegistryUsers()
+            ScanScreenEvent.OnActualizeDismiss -> viewState = registryCleanup.dismiss(viewState)
+            is ScanScreenEvent.OnActualizeFilterChanged ->
+                viewState = registryCleanup.filterChanged(viewState, viewEvent.filter)
+            ScanScreenEvent.OnActualizeRemoveAll -> removeAllOrphanedUsers()
+            is ScanScreenEvent.OnActualizeRemoveSingle ->
+                removeSingleOrphanedUser(viewEvent.user.email)
+
+            ScanScreenEvent.OnAuthCheckClick -> loadAuthOrphans()
+            ScanScreenEvent.OnAuthCheckDismiss -> viewState = authCleanup.dismiss(viewState)
+            is ScanScreenEvent.OnAuthCheckFilterChanged ->
+                viewState = authCleanup.filterChanged(viewState, viewEvent.filter)
+            ScanScreenEvent.OnAuthCheckDeleteAll -> deleteAllAuthOrphans()
+            is ScanScreenEvent.OnAuthCheckDeleteSingle -> deleteSingleAuthOrphan(viewEvent.email)
+
+            ScanScreenEvent.OnLostSearchClick -> viewState = lostSearch.open(viewState)
+            ScanScreenEvent.OnLostSearchDismiss -> viewState = lostSearch.dismiss(viewState)
+            is ScanScreenEvent.OnLostSearchDatePickerOpen ->
+                viewState = lostSearch.datePickerOpen(viewState, viewEvent.target)
+            ScanScreenEvent.OnLostSearchDatePickerDismiss ->
+                viewState = lostSearch.datePickerDismiss(viewState)
+            is ScanScreenEvent.OnLostSearchStartDateChanged ->
+                viewState = viewState.copy(lostSearchStartDate = viewEvent.date)
+            is ScanScreenEvent.OnLostSearchEndDateChanged ->
+                viewState = viewState.copy(lostSearchEndDate = viewEvent.date)
+            is ScanScreenEvent.OnLostSearchStartExactChanged ->
+                viewState = lostSearch.exactChanged(viewState, true, viewEvent.exact)
+            is ScanScreenEvent.OnLostSearchEndExactChanged ->
+                viewState = lostSearch.exactChanged(viewState, false, viewEvent.exact)
+            is ScanScreenEvent.OnLostSearchMonthsDialogOpen ->
+                viewState = lostSearch.monthsDialogOpen(viewState, viewEvent.forStart)
+            is ScanScreenEvent.OnLostSearchMonthsInputChanged ->
+                viewState = lostSearch.monthsInputChanged(viewState, viewEvent.value)
+            ScanScreenEvent.OnLostSearchMonthsConfirm ->
+                viewState = lostSearch.monthsConfirm(viewState)
+            ScanScreenEvent.OnLostSearchMonthsDismiss ->
+                viewState = lostSearch.monthsDismiss(viewState)
+            is ScanScreenEvent.OnLostSearchAddDay ->
+                viewState = lostSearch.addDay(viewState, viewEvent.date)
+            is ScanScreenEvent.OnLostSearchRemoveDay -> viewState = viewState.copy(
+                lostSearchExpectedDays = viewState.lostSearchExpectedDays.filterNot {
+                    it.date == viewEvent.date
+                },
+            )
+            is ScanScreenEvent.OnLostSearchDayExactChanged ->
+                viewState = lostSearch.dayExactChanged(viewState, viewEvent.date, viewEvent.exact)
+            is ScanScreenEvent.OnLostSearchDayToleranceChanged ->
+                viewState = lostSearch.dayToleranceChanged(
+                    viewState,
+                    viewEvent.date,
+                    viewEvent.tolerance,
+                )
+            is ScanScreenEvent.OnLostSearchDayDrinkTypeChanged ->
+                viewState = lostSearch.dayDrinkTypeChanged(
+                    viewState,
+                    viewEvent.date,
+                    viewEvent.drinkType,
+                )
+            ScanScreenEvent.OnLostSearchRun -> runLostSearch()
         }
     }
 
@@ -63,7 +143,6 @@ class ScanViewModel(
                 }
             }
         }
-
         withViewModelScope {
             scanRepository.getScanProgress().collectLatest { progress ->
                 viewState = viewState.copy(
@@ -78,7 +157,6 @@ class ScanViewModel(
                 )
             }
         }
-
         withViewModelScope {
             scanRepository.getDeletionProgress().collectLatest { (deleted, total) ->
                 viewState = viewState.copy(
@@ -100,7 +178,7 @@ class ScanViewModel(
             } catch (e: Exception) {
                 viewState = viewState.copy(
                     isInitializingFirebase = false,
-                    errorMessage = e.message ?: "Failed to initialize Firebase"
+                    errorMessage = e.message ?: "Failed to initialize Firebase",
                 )
                 viewAction = ScanScreenAction.FirebaseInitFailed
             }
@@ -122,31 +200,24 @@ class ScanViewModel(
                 .onError { error ->
                     println("[ViewModel] Scan error: $error")
                     viewState = viewState.copy(isScanning = false)
-                    when (error) {
-                        is ScanError -> {
-                            when (error) {
-                                ScanError.DailyLimitReached ->
-                                    viewAction = ScanScreenAction.ShowDailyLimitReached(viewState.maxReads)
-                                ScanError.FirebaseNotInitialized ->
-                                    viewAction = ScanScreenAction.ShowError("Firebase not initialized")
-                                else ->
-                                    viewAction = ScanScreenAction.ShowError(error.name)
-                            }
-                        }
-                        else -> viewAction = ScanScreenAction.ShowError("Unknown error")
-                    }
+                    viewAction = scanActionFor(error)
                 }
         }
+    }
+
+    private fun scanActionFor(error: Error): ScanScreenAction = when (error) {
+        is ScanError -> when (error) {
+            ScanError.DailyLimitReached -> ScanScreenAction.ShowDailyLimitReached(viewState.maxReads)
+            ScanError.FirebaseNotInitialized -> ScanScreenAction.FirebaseNotInitialized
+            else -> ScanScreenAction.ShowError(error.name)
+        }
+        else -> ScanScreenAction.UnknownError
     }
 
     private fun onStopScan() {
         withViewModelScope {
             scanRepository.stopScan()
         }
-    }
-
-    private fun onDeleteAllClick() {
-        viewState = viewState.copy(isDeleteAllConfirmVisible = true)
     }
 
     private fun onDeleteAllConfirm() {
@@ -162,22 +233,6 @@ class ScanViewModel(
         }
     }
 
-    private fun onDeleteAllDismiss() {
-        viewState = viewState.copy(isDeleteAllConfirmVisible = false)
-    }
-
-    private fun onUserClick(user: InactiveUser) {
-        viewState = viewState.copy(selectedUser = user)
-    }
-
-    private fun onUserDetailDismiss() {
-        viewState = viewState.copy(selectedUser = null)
-    }
-
-    private fun onDeleteSingleUserClick() {
-        viewState = viewState.copy(isDeleteSingleConfirmVisible = true)
-    }
-
     private fun onDeleteSingleConfirm() {
         val user = viewState.selectedUser ?: return
         viewState = viewState.copy(isDeleteSingleConfirmVisible = false)
@@ -191,14 +246,6 @@ class ScanViewModel(
                     viewAction = ScanScreenAction.ShowError(error.toString())
                 }
         }
-    }
-
-    private fun onDeleteSingleDismiss() {
-        viewState = viewState.copy(isDeleteSingleConfirmVisible = false)
-    }
-
-    private fun onReadLimitChanged(limit: Int) {
-        viewState = viewState.copy(readLimit = limit.coerceAtLeast(1))
     }
 
     private fun onResetCounter() {
@@ -229,114 +276,123 @@ class ScanViewModel(
         }
     }
 
-    private fun onRestoreClick() {
+    private fun loadBackupEntries() {
         withViewModelScope {
-            val entries = scanRepository.getBackupEntries()
-            viewState = viewState.copy(
-                isRestoreDialogVisible = true,
-                backupEntries = entries,
-                backupFilter = "",
-                selectedBackupEntry = null,
-            )
+            restore.loadEntries()
+                .onSuccess { entries -> viewState = restore.show(viewState, entries) }
+                .onError { error ->
+                    viewAction = ScanScreenAction.ShowError(error.toString())
+                }
         }
     }
 
-    private fun onRestoreDismiss() {
-        viewState = viewState.copy(
-            isRestoreDialogVisible = false,
-            selectedBackupEntry = null,
-        )
-    }
-
-    private fun onRestoreFilterChanged(filter: String) {
-        viewState = viewState.copy(backupFilter = filter)
-    }
-
-    private fun onRestoreSelectEntry(entry: BackupEntry) {
-        viewState = viewState.copy(selectedBackupEntry = entry)
-    }
-
-    private fun onRestoreConfirm() {
-        val entry = viewState.selectedBackupEntry ?: return
-        viewState = viewState.copy(isRestoring = true)
+    private fun confirmRestore() {
+        val entry: BackupEntry = viewState.selectedBackupEntry ?: return
+        viewState = restore.startRestore(viewState)
         withViewModelScope {
-            scanRepository.restoreUser(entry)
+            restore.restore(entry)
                 .onSuccess {
-                    viewState = viewState.copy(
-                        isRestoring = false,
-                        isRestoreDialogVisible = false,
-                        selectedBackupEntry = null,
-                    )
+                    viewState = restore.applySuccess(viewState)
                     viewAction = ScanScreenAction.ShowRestoreComplete(entry.user.id)
                 }
                 .onError { error ->
-                    viewState = viewState.copy(isRestoring = false)
+                    viewState = restore.stopRestoring(viewState)
                     viewAction = ScanScreenAction.ShowError(error.toString())
                 }
         }
     }
 
-    private fun onActualizeClick() {
-        viewState = viewState.copy(isActualizeDialogVisible = true, isActualizing = true)
+    private fun loadOrphanedRegistryUsers() {
+        viewState = registryCleanup.show(viewState)
         withViewModelScope {
-            scanRepository.findOrphanedRegistryUsers()
+            registryCleanup.findOrphaned()
                 .onSuccess { (total, users) ->
-                    viewState = viewState.copy(
-                        isActualizing = false,
-                        orphanedRegistryUsers = users,
-                        totalRegistryUsers = total,
-                        actualizeFilter = "",
-                    )
+                    viewState = registryCleanup.applyLoaded(viewState, total, users)
                 }
                 .onError { error ->
-                    viewState = viewState.copy(isActualizing = false)
+                    viewState = registryCleanup.stopLoading(viewState)
                     viewAction = ScanScreenAction.ShowError(error.toString())
                 }
         }
     }
 
-    private fun onActualizeDismiss() {
-        viewState = viewState.copy(
-            isActualizeDialogVisible = false,
-            orphanedRegistryUsers = emptyList(),
-            actualizeFilter = "",
-        )
-    }
-
-    private fun onActualizeFilterChanged(filter: String) {
-        viewState = viewState.copy(actualizeFilter = filter)
-    }
-
-    private fun onActualizeRemoveAll() {
+    private fun removeAllOrphanedUsers() {
         val users = viewState.orphanedRegistryUsers
         if (users.isEmpty()) return
-        viewState = viewState.copy(isRemovingOrphans = true)
+        viewState = registryCleanup.startRemoveAll(viewState)
         withViewModelScope {
-            scanRepository.removeAllOrphanedRegistryUsers(users)
+            registryCleanup.removeAll(users)
                 .onSuccess {
-                    viewState = viewState.copy(
-                        isRemovingOrphans = false,
-                        orphanedRegistryUsers = emptyList(),
-                        isActualizeDialogVisible = false,
-                    )
+                    viewState = registryCleanup.applyRemoveAllSuccess(viewState)
                     viewAction = ScanScreenAction.ShowActualizeComplete(users.size)
                 }
                 .onError { error ->
-                    viewState = viewState.copy(isRemovingOrphans = false)
+                    viewState = registryCleanup.stopRemoving(viewState)
                     viewAction = ScanScreenAction.ShowError(error.toString())
                 }
         }
     }
 
-    private fun onActualizeRemoveSingle(user: com.alcodb.optimizer.feature_scan.domain.models.OrphanedRegistryUser) {
+    private fun removeSingleOrphanedUser(email: String) {
         withViewModelScope {
-            scanRepository.removeRegistryUser(user.email)
+            registryCleanup.removeSingle(email)
                 .onSuccess {
-                    val updated = viewState.orphanedRegistryUsers.filter { it.email != user.email }
-                    viewState = viewState.copy(orphanedRegistryUsers = updated)
+                    viewState = registryCleanup.applyRemoveSingle(viewState, email)
                     viewAction = ScanScreenAction.ShowActualizeComplete(1)
                 }
                 .onError { error ->
+                    viewAction = ScanScreenAction.ShowError(error.toString())
+                }
+        }
+    }
+
+    private fun loadAuthOrphans() {
+        viewState = authCleanup.show(viewState)
+        withViewModelScope {
+            authCleanup.findOrphaned()
+                .onSuccess { emails ->
+                    viewState = authCleanup.applyLoaded(viewState, emails)
+                }
+                .onError { error ->
+                    viewState = authCleanup.stopChecking(viewState)
+                    viewAction = ScanScreenAction.ShowError(error.toString())
+                }
+        }
+    }
+
+    private fun deleteAllAuthOrphans() {
+        viewState = authCleanup.startDeleteAll(viewState)
+        withViewModelScope {
+            val deleted = authCleanup.deleteAll(viewState.authOrphanEmails.toList())
+            viewState = authCleanup.applyDeleteAllSuccess(viewState)
+            viewAction = ScanScreenAction.ShowAuthCheckComplete(deleted)
+        }
+    }
+
+    private fun deleteSingleAuthOrphan(email: String) {
+        withViewModelScope {
+            authCleanup.deleteSingle(email)
+                .onSuccess {
+                    viewState = authCleanup.applyDeleteSingle(viewState, email)
+                    viewAction = ScanScreenAction.ShowAuthCheckComplete(1)
+                }
+                .onError { error ->
+                    viewAction = ScanScreenAction.ShowError(error.toString())
+                }
+        }
+    }
+
+    private fun runLostSearch() {
+        if (viewState.isLostSearchRunning) return
+        val (prepared, criteria) = lostSearch.prepareRun(viewState)
+        viewState = prepared
+        withViewModelScope {
+            lostSearch.search(criteria, viewState.readLimit)
+                .onSuccess { result ->
+                    viewState = lostSearch.applyResult(viewState, result)
+                }
+                .onError { error ->
+                    viewState = lostSearch.stopRunning(viewState)
                     viewAction = ScanScreenAction.ShowError(error.toString())
                 }
         }

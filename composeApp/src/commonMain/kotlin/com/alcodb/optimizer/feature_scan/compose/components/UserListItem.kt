@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.alcodb.optimizer.feature_scan.domain.models.InactiveUser
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.number
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -107,7 +108,7 @@ fun UserListItem(
 private fun formatDate(epochDays: Long): String {
     return try {
         val date = LocalDate.fromEpochDays(epochDays.toInt())
-        "${date.dayOfMonth}.${date.monthNumber}.${date.year}"
+        "${date.day}.${date.month.number}.${date.year}"
     } catch (_: Exception) {
         "Unknown"
     }

@@ -1,7 +1,6 @@
 package com.alcodb.optimizer.common.domain.utils
 
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.IO
 
 interface Dispatchers {
     val main: CoroutineDispatcher

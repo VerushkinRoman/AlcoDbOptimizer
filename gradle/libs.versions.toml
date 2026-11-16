@@ -1,29 +1,36 @@
 [versions]
+#noinspection UnusedVersionCatalogEntry
 android-compileSdk = "37"
-android-minSdk = "24"
+#noinspection UnusedVersionCatalogEntry
+android-minSdk = "26"
+#noinspection UnusedVersionCatalogEntry
 android-targetSdk = "37"
+#noinspection UnusedVersionCatalogEntry
 versionCode = "1"
+#noinspection UnusedVersionCatalogEntry
 versionName = "1.0.0"
+#noinspection UnusedVersionCatalogEntry
 namespace = "com.alcodb.optimizer"
 
-kotlin = "2.4.10"
+kotlin = "2.4.21"
 
-agp = "9.3.1"
+agp = "9.5.1"
 androidx-activity = "1.13.0"
 jetbrains-lifecycle = "2.11.0"
 
-compose-multiplatform = "1.11.1"
-material3 = "1.11.0-alpha07"
+compose-multiplatform = "1.12.2"
+material3 = "1.12.0-alpha03"
 materialIcons-extended = "1.7.3"
 
 kotlinx-coroutines = "1.11.0"
 kotlinx-datetime = "0.8.0"
-kotlinx-serialization = "1.11.0"
+kotlinx-serialization = "1.13.0"
 multiplatformSettings = "1.3.0"
 kodein = "7.33.0"
-ktor = "3.5.1"
-firebase-admin = "9.2.0"
-slf4j = "2.0.16"
+ktor = "3.6.1"
+firebase-admin = "9.12.0"
+slf4j = "2.0.20"
+detekt = "2.0.0-alpha.6"
 
 [libraries]
 # Android
@@ -47,6 +54,7 @@ kodein = { module = "org.kodein.di:kodein-di", version.ref = "kodein" }
 kodein-compose = { module = "org.kodein.di:kodein-di-framework-compose", version.ref = "kodein" }
 
 lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "jetbrains-lifecycle" }
+lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "jetbrains-lifecycle" }
 
 ktor-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
@@ -69,3 +77,4 @@ kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref 
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }

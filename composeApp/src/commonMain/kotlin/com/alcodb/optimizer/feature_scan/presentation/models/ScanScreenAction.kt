@@ -8,6 +8,9 @@ sealed interface ScanScreenAction {
     data class ShowUserDeleted(val userId: String) : ScanScreenAction
     data object FirebaseInitialized : ScanScreenAction
     data object FirebaseInitFailed : ScanScreenAction
+    data object FirebaseNotInitialized : ScanScreenAction
+    data object UnknownError : ScanScreenAction
     data class ShowRestoreComplete(val userId: String) : ScanScreenAction
     data class ShowActualizeComplete(val removedCount: Int) : ScanScreenAction
+    data class ShowAuthCheckComplete(val removedCount: Int) : ScanScreenAction
 }
