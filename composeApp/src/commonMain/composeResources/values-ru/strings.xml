@@ -103,6 +103,7 @@
     <string name="lost_search_days">Даты, которые должны быть</string>
     <string name="lost_search_add_date">Добавить дату</string>
     <string name="lost_search_days_tolerance">± дней</string>
+    <string name="lost_search_any">Любая</string>
     <string name="lost_search_many">Много</string>
     <string name="lost_search_half">Половина</string>
     <string name="lost_search_run">Искать</string>
@@ -114,5 +115,18 @@
     <string name="lost_search_close">Закрыть</string>
     <string name="lost_search_range">%1$s — %2$s</string>
     <string name="lost_search_counts">Дней: %1$d, с выпивкой: %2$d</string>
+    <string name="lost_search_collection_filter">Коллекция или email</string>
+    <string name="lost_search_collection_filter_hint">Часть id коллекции или email</string>
+    <string name="lost_search_peak_title">Самый активный месяц</string>
+    <string name="lost_search_peak_pick">Выбрать месяц</string>
+    <string name="lost_search_peak_min_days">Мин. дней с выпивкой</string>
+    <string name="lost_search_peak_max_days">Макс. дней (0 = без ограничения)</string>
+    <string name="lost_search_peak_min_streak">Мин. подряд идущих дней</string>
+    <string name="lost_search_quiet_title">Месяцы с редкими записями</string>
+    <string name="lost_search_quiet_toggle">Ограничить записи в месяц</string>
+    <string name="lost_search_quiet_from">С месяца</string>
+    <string name="lost_search_quiet_to">По месяц</string>
+    <string name="lost_search_quiet_max">Макс. дней с выпивкой в месяц</string>
+    <string name="lost_search_peak_result">Пиковый месяц: %1$d дней, максимум подряд: %2$d</string>
     <string name="lost_search_remove_date">Удалить дату</string>
 </resources>

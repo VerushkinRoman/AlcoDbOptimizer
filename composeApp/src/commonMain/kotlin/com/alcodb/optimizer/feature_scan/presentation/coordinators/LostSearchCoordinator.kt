@@ -4,11 +4,14 @@ import com.alcodb.optimizer.common.domain.utils.Error
 import com.alcodb.optimizer.common.domain.utils.Result
 import com.alcodb.optimizer.feature_scan.domain.models.ExpectedDay
 import com.alcodb.optimizer.feature_scan.domain.models.ExpectedDrinkType
+import com.alcodb.optimizer.feature_scan.domain.models.LowActivityPeriod
 import com.alcodb.optimizer.feature_scan.domain.models.LostDataSearchCriteria
+import com.alcodb.optimizer.feature_scan.domain.models.PeakMonthCriteria
 import com.alcodb.optimizer.feature_scan.domain.models.LostDataSearchResult
 import com.alcodb.optimizer.feature_scan.domain.repository.LostDataSearchRepository
 import com.alcodb.optimizer.feature_scan.presentation.models.LostSearchDateTarget
 import com.alcodb.optimizer.feature_scan.presentation.models.ScanScreenState
+import com.alcodb.optimizer.feature_scan.presentation.models.canRunLostSearch
 import kotlinx.datetime.LocalDate
 
 /**
@@ -109,6 +112,8 @@ internal class LostSearchCoordinator(
         },
     )
 
+    fun canRun(state: ScanScreenState): Boolean = state.canRunLostSearch()
+
     fun prepareRun(state: ScanScreenState): Pair<ScanScreenState, LostDataSearchCriteria> {
         val criteria = LostDataSearchCriteria(
             startDate = state.lostSearchStartDate,
@@ -118,6 +123,30 @@ internal class LostSearchCoordinator(
             endExact = state.lostSearchEndExact,
             endMonthTolerance = if (state.lostSearchEndExact) 0 else state.lostSearchEndMonths,
             expectedDays = state.lostSearchExpectedDays,
+            collectionFilter = state.lostSearchCollectionFilter.trim(),
+            peakMonth = state.lostSearchPeakMonth?.let { month ->
+                PeakMonthCriteria(
+                    month = month,
+                    minDrinkDays = state.lostSearchPeakMinDays,
+                    maxDrinkDays = state.lostSearchPeakMaxDays,
+                    minConsecutiveDays = state.lostSearchPeakMinConsecutive,
+                )
+            },
+            lowActivityPeriod = if (state.lostSearchQuietEnabled) {
+                val from = state.lostSearchQuietFrom
+                val to = state.lostSearchQuietTo
+                if (from != null && to != null && from <= to) {
+                    LowActivityPeriod(
+                        fromMonth = from,
+                        toMonth = to,
+                        maxDrinkDaysPerMonth = state.lostSearchQuietMaxPerMonth,
+                    )
+                } else {
+                    null
+                }
+            } else {
+                null
+            },
         )
         return state.copy(
             isLostSearchRunning = true,

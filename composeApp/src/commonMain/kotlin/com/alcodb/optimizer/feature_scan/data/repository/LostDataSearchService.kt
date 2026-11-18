@@ -6,7 +6,9 @@ import com.alcodb.optimizer.common.domain.utils.Dispatchers
 import com.alcodb.optimizer.common.domain.utils.Error
 import com.alcodb.optimizer.common.domain.utils.Result
 import com.alcodb.optimizer.feature_scan.data.datasource.ScanDataSource
+import com.alcodb.optimizer.feature_scan.domain.models.ExpectedDrinkType
 import com.alcodb.optimizer.feature_scan.domain.models.FoundCollection
+import com.alcodb.optimizer.feature_scan.domain.models.LowActivityPeriod
 import com.alcodb.optimizer.feature_scan.domain.models.LostDataSearchCriteria
 import com.alcodb.optimizer.feature_scan.domain.models.LostDataSearchResult
 import com.alcodb.optimizer.feature_scan.domain.utils.ScanError
@@ -38,14 +40,20 @@ internal class LostDataSearchService(
                 is Result.Error -> return@withContext Result.Error(ScanError.FailedToReadDatabase)
                 is Result.Success -> fetched.data
             }
+            val filter = criteria.collectionFilter.trim()
+            val candidates = if (filter.isEmpty()) {
+                userCollections
+            } else {
+                userCollections.filter { it.contains(filter, ignoreCase = true) }
+            }
             val limit = maxReads.coerceAtLeast(1)
             val found = mutableListOf<FoundCollection>()
             var checked = 0
             var stoppedByLimit = false
 
-            println("[LostSearch] Collections to check: ${userCollections.size}, limit: $limit")
+            println("[LostSearch] Collections to check: ${candidates.size}, limit: $limit")
 
-            for (collectionId in userCollections) {
+            for (collectionId in candidates) {
                 if (checked >= limit) {
                     stoppedByLimit = true
                     break
@@ -66,13 +74,13 @@ internal class LostDataSearchService(
                 delay(5)
             }
 
-            println("[LostSearch] Checked $checked/${userCollections.size}, found: ${found.size}")
+            println("[LostSearch] Checked $checked/${candidates.size}, found: ${found.size}")
 
             Result.Success(
                 LostDataSearchResult(
                     collections = found,
                     checkedCollections = checked,
-                    totalCollections = userCollections.size,
+                    totalCollections = candidates.size,
                     stoppedByLimit = stoppedByLimit,
                 ),
             )
@@ -99,8 +107,9 @@ internal class LostDataSearchService(
         }
         if (markedDays.isEmpty()) return null
 
-        val firstDate = markedDays.minOf { it.first }
-        val lastDate = markedDays.maxOf { it.first }
+        val sortedDays = markedDays.distinctBy { it.first }.sortedBy { it.first }
+        val firstDate = sortedDays.first().first
+        val lastDate = sortedDays.last().first
 
         if (!matchesBoundary(
                 actual = firstDate,
@@ -119,21 +128,69 @@ internal class LostDataSearchService(
         ) return null
 
         for (expected in criteria.expectedDays) {
-            val matched = markedDays.any { (date, drinkType) ->
-                drinkType.equals(expected.drinkType.name, ignoreCase = true) &&
+            val matched = sortedDays.any { (date, drinkType) ->
+                matchesDrinkType(drinkType, expected.drinkType) &&
                     matchesDay(date, expected.date, expected.exact, expected.dayTolerance)
             }
             if (!matched) return null
         }
 
+        var peakStreak = 0
+        val peakDays = criteria.peakMonth?.let { peak ->
+            val peakKey = monthIndex(peak.month)
+            val monthDays = sortedDays.filter { monthIndex(it.first) == peakKey }
+            if (monthDays.size < peak.minDrinkDays) return null
+            if (peak.maxDrinkDays > 0 && monthDays.size > peak.maxDrinkDays) return null
+            peakStreak = longestStreak(monthDays.map { it.first })
+            if (peakStreak < peak.minConsecutiveDays) return null
+            monthDays.size
+        } ?: 0
+
+        val lowActivity = criteria.lowActivityPeriod
+        if (lowActivity != null && !matchesLowActivity(sortedDays, lowActivity)) return null
+
         return FoundCollection(
             id = collectionId,
             totalDays = dates.size,
-            drinkDays = markedDays.size,
+            drinkDays = sortedDays.size,
             firstDate = firstDate,
             lastDate = lastDate,
             matchedExpectedDays = criteria.expectedDays.size,
+            peakDrinkDays = peakDays,
+            maxConsecutiveDays = peakStreak,
         )
+    }
+
+    private fun matchesDrinkType(actual: String, expected: ExpectedDrinkType): Boolean =
+        expected == ExpectedDrinkType.Any || actual.equals(expected.name, ignoreCase = true)
+
+    private fun matchesLowActivity(
+        markedDays: List<Pair<LocalDate, String>>,
+        period: LowActivityPeriod,
+    ): Boolean {
+        val from = monthIndex(period.fromMonth)
+        val to = monthIndex(period.toMonth)
+        if (from > to) return false
+        val perMonth = markedDays.groupingBy { monthIndex(it.first) }.eachCount()
+        return (from..to).all { (perMonth[it] ?: 0) <= period.maxDrinkDaysPerMonth }
+    }
+
+    private fun monthIndex(date: LocalDate): Int = date.year * 12 + date.month.ordinal
+
+    private fun longestStreak(dates: List<LocalDate>): Int {
+        if (dates.isEmpty()) return 0
+        val sorted = dates.map { it.toEpochDays() }.distinct().sorted()
+        var best = 1
+        var current = 1
+        for (index in 1 until sorted.size) {
+            if (sorted[index] - sorted[index - 1] == 1L) {
+                current++
+                if (current > best) best = current
+            } else {
+                current = 1
+            }
+        }
+        return best
     }
 
     private fun matchesBoundary(

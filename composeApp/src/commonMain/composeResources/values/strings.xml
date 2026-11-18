@@ -103,6 +103,7 @@
     <string name="lost_search_days">Dates that must be present</string>
     <string name="lost_search_add_date">Add date</string>
     <string name="lost_search_days_tolerance">± days</string>
+    <string name="lost_search_any">Any</string>
     <string name="lost_search_many">Many</string>
     <string name="lost_search_half">Half</string>
     <string name="lost_search_run">Search</string>
@@ -114,5 +115,18 @@
     <string name="lost_search_close">Close</string>
     <string name="lost_search_range">%1$s — %2$s</string>
     <string name="lost_search_counts">Days: %1$d, drinks: %2$d</string>
+    <string name="lost_search_collection_filter">Collection or email</string>
+    <string name="lost_search_collection_filter_hint">Part of collection id or email</string>
+    <string name="lost_search_peak_title">Busiest month</string>
+    <string name="lost_search_peak_pick">Pick month</string>
+    <string name="lost_search_peak_min_days">Min drink days</string>
+    <string name="lost_search_peak_max_days">Max drink days (0 = any)</string>
+    <string name="lost_search_peak_min_streak">Min consecutive days</string>
+    <string name="lost_search_quiet_title">Months with few entries</string>
+    <string name="lost_search_quiet_toggle">Limit entries per month</string>
+    <string name="lost_search_quiet_from">From month</string>
+    <string name="lost_search_quiet_to">To month</string>
+    <string name="lost_search_quiet_max">Max drink days per month</string>
+    <string name="lost_search_peak_result">Peak month: %1$d days, longest run: %2$d</string>
     <string name="lost_search_remove_date">Remove date</string>
 </resources>

@@ -45,6 +45,15 @@ sealed interface ScanScreenEvent {
     data object OnLostSearchDatePickerDismiss : ScanScreenEvent
     data class OnLostSearchStartDateChanged(val date: LocalDate) : ScanScreenEvent
     data class OnLostSearchEndDateChanged(val date: LocalDate) : ScanScreenEvent
+    data class OnLostSearchCollectionFilterChanged(val filter: String) : ScanScreenEvent
+    data class OnLostSearchPeakMonthChanged(val date: LocalDate) : ScanScreenEvent
+    data class OnLostSearchPeakMinDaysChanged(val days: Int) : ScanScreenEvent
+    data class OnLostSearchPeakMaxDaysChanged(val days: Int) : ScanScreenEvent
+    data class OnLostSearchPeakMinConsecutiveChanged(val days: Int) : ScanScreenEvent
+    data class OnLostSearchQuietToggle(val enabled: Boolean) : ScanScreenEvent
+    data class OnLostSearchQuietFromChanged(val date: LocalDate) : ScanScreenEvent
+    data class OnLostSearchQuietToChanged(val date: LocalDate) : ScanScreenEvent
+    data class OnLostSearchQuietMaxChanged(val days: Int) : ScanScreenEvent
     data class OnLostSearchStartExactChanged(val exact: Boolean) : ScanScreenEvent
     data class OnLostSearchEndExactChanged(val exact: Boolean) : ScanScreenEvent
     data class OnLostSearchMonthsDialogOpen(val forStart: Boolean) : ScanScreenEvent

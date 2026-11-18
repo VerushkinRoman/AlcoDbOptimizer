@@ -98,6 +98,28 @@ class ScanViewModel(
                 viewState = viewState.copy(lostSearchStartDate = viewEvent.date)
             is ScanScreenEvent.OnLostSearchEndDateChanged ->
                 viewState = viewState.copy(lostSearchEndDate = viewEvent.date)
+            is ScanScreenEvent.OnLostSearchCollectionFilterChanged ->
+                viewState = viewState.copy(lostSearchCollectionFilter = viewEvent.filter)
+            is ScanScreenEvent.OnLostSearchPeakMonthChanged ->
+                viewState = viewState.copy(lostSearchPeakMonth = viewEvent.date)
+            is ScanScreenEvent.OnLostSearchPeakMinDaysChanged ->
+                viewState = viewState.copy(lostSearchPeakMinDays = viewEvent.days.coerceIn(0, 31))
+            is ScanScreenEvent.OnLostSearchPeakMaxDaysChanged ->
+                viewState = viewState.copy(lostSearchPeakMaxDays = viewEvent.days.coerceIn(0, 31))
+            is ScanScreenEvent.OnLostSearchPeakMinConsecutiveChanged ->
+                viewState = viewState.copy(
+                    lostSearchPeakMinConsecutive = viewEvent.days.coerceIn(0, 31),
+                )
+            is ScanScreenEvent.OnLostSearchQuietToggle ->
+                viewState = viewState.copy(lostSearchQuietEnabled = viewEvent.enabled)
+            is ScanScreenEvent.OnLostSearchQuietFromChanged ->
+                viewState = viewState.copy(lostSearchQuietFrom = viewEvent.date)
+            is ScanScreenEvent.OnLostSearchQuietToChanged ->
+                viewState = viewState.copy(lostSearchQuietTo = viewEvent.date)
+            is ScanScreenEvent.OnLostSearchQuietMaxChanged ->
+                viewState = viewState.copy(
+                    lostSearchQuietMaxPerMonth = viewEvent.days.coerceIn(0, 31),
+                )
             is ScanScreenEvent.OnLostSearchStartExactChanged ->
                 viewState = lostSearch.exactChanged(viewState, true, viewEvent.exact)
             is ScanScreenEvent.OnLostSearchEndExactChanged ->
@@ -383,7 +405,7 @@ class ScanViewModel(
     }
 
     private fun runLostSearch() {
-        if (viewState.isLostSearchRunning) return
+        if (viewState.isLostSearchRunning || !lostSearch.canRun(viewState)) return
         val (prepared, criteria) = lostSearch.prepareRun(viewState)
         viewState = prepared
         withViewModelScope {

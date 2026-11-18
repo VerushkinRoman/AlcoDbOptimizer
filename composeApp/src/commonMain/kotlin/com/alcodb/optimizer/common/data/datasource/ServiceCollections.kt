@@ -9,7 +9,8 @@ package com.alcodb.optimizer.common.data.datasource
  * - `users` — uid-keyed user profiles and their subcollections (`data`, `settings`, `legacySync`),
  * - `anonymous_user` — data of anonymous sessions,
  * - `email_index` — email to uid mapping,
- * - `Avatars`/`AvatarLarge` — user avatars.
+ * - `Avatars`/`AvatarLarge` — user avatars,
+ * - `Global Notifications` — global announcements shown by the Calendar app.
  */
 object ServiceCollections {
     val names: Set<String> = setOf(
@@ -19,6 +20,7 @@ object ServiceCollections {
         "email_index",
         "Avatars",
         "AvatarLarge",
+        "Global Notifications",
     )
 
     fun isService(collection: String): Boolean = collection in names

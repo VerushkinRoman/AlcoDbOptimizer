@@ -7,7 +7,23 @@ import com.alcodb.optimizer.feature_scan.domain.models.InactiveUser
 import com.alcodb.optimizer.feature_scan.domain.models.OrphanedRegistryUser
 import kotlinx.datetime.LocalDate
 
-enum class LostSearchDateTarget { Start, End, New }
+enum class LostSearchDateTarget { Start, End, New, PeakMonth, QuietFrom, QuietTo }
+
+fun ScanScreenState.canRunLostSearch(): Boolean {
+    val quietReady = !lostSearchQuietEnabled ||
+        (
+            lostSearchQuietFrom != null &&
+                lostSearchQuietTo != null &&
+                lostSearchQuietFrom <= lostSearchQuietTo
+            )
+    val hasCriteria = lostSearchStartDate != null ||
+        lostSearchEndDate != null ||
+        lostSearchExpectedDays.isNotEmpty() ||
+        lostSearchCollectionFilter.isNotBlank() ||
+        lostSearchPeakMonth != null ||
+        lostSearchQuietEnabled
+    return hasCriteria && quietReady
+}
 
 data class ScanScreenState(
     val inactiveUsers: List<InactiveUser> = emptyList(),
@@ -54,6 +70,15 @@ data class ScanScreenState(
     val lostSearchEndExact: Boolean = true,
     val lostSearchEndMonths: Int = 1,
     val lostSearchExpectedDays: List<ExpectedDay> = emptyList(),
+    val lostSearchCollectionFilter: String = "",
+    val lostSearchPeakMonth: LocalDate? = null,
+    val lostSearchPeakMinDays: Int = 0,
+    val lostSearchPeakMaxDays: Int = 0,
+    val lostSearchPeakMinConsecutive: Int = 0,
+    val lostSearchQuietEnabled: Boolean = false,
+    val lostSearchQuietFrom: LocalDate? = null,
+    val lostSearchQuietTo: LocalDate? = null,
+    val lostSearchQuietMaxPerMonth: Int = 8,
     val isLostSearchRunning: Boolean = false,
     val lostSearchChecked: Int = 0,
     val lostSearchTotal: Int = 0,

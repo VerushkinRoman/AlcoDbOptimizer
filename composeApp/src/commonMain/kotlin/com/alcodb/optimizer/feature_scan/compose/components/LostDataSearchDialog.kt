@@ -26,6 +26,7 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -45,6 +46,7 @@ import com.alcodb.optimizer.feature_scan.domain.models.FoundCollection
 import com.alcodb.optimizer.feature_scan.presentation.models.LostSearchDateTarget
 import com.alcodb.optimizer.feature_scan.presentation.models.ScanScreenEvent
 import com.alcodb.optimizer.feature_scan.presentation.models.ScanScreenState
+import com.alcodb.optimizer.feature_scan.presentation.models.canRunLostSearch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
@@ -68,6 +70,21 @@ fun LostDataSearchDialog(
                     .heightIn(max = 520.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                item {
+                    OutlinedTextField(
+                        value = state.lostSearchCollectionFilter,
+                        onValueChange = {
+                            onEvent(ScanScreenEvent.OnLostSearchCollectionFilterChanged(it))
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        label = { Text(stringResource(Res.string.lost_search_collection_filter)) },
+                        placeholder = {
+                            Text(stringResource(Res.string.lost_search_collection_filter_hint))
+                        },
+                    )
+                }
+
                 item {
                     BoundarySection(
                         label = stringResource(Res.string.lost_search_start),
@@ -103,6 +120,10 @@ fun LostDataSearchDialog(
                         },
                     )
                 }
+
+                item { PeakMonthSection(state = state, onEvent = onEvent) }
+
+                item { LowActivitySection(state = state, onEvent = onEvent) }
 
                 item {
                     Text(
@@ -202,11 +223,7 @@ fun LostDataSearchDialog(
         confirmButton = {
             Button(
                 onClick = { onEvent(ScanScreenEvent.OnLostSearchRun) },
-                enabled = !state.isLostSearchRunning && (
-                    state.lostSearchStartDate != null ||
-                        state.lostSearchEndDate != null ||
-                        state.lostSearchExpectedDays.isNotEmpty()
-                    ),
+                enabled = !state.isLostSearchRunning && state.canRunLostSearch(),
             ) {
                 Text(stringResource(Res.string.lost_search_run))
             }
@@ -227,6 +244,9 @@ fun LostDataSearchDialog(
             LostSearchDateTarget.Start -> state.lostSearchStartDate?.toUtcMillis()
             LostSearchDateTarget.End -> state.lostSearchEndDate?.toUtcMillis()
             LostSearchDateTarget.New -> null
+            LostSearchDateTarget.PeakMonth -> state.lostSearchPeakMonth?.toUtcMillis()
+            LostSearchDateTarget.QuietFrom -> state.lostSearchQuietFrom?.toUtcMillis()
+            LostSearchDateTarget.QuietTo -> state.lostSearchQuietTo?.toUtcMillis()
         }
         val pickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
 
@@ -248,6 +268,15 @@ fun LostDataSearchDialog(
                                 )
                                 LostSearchDateTarget.New -> onEvent(
                                     ScanScreenEvent.OnLostSearchAddDay(date),
+                                )
+                                LostSearchDateTarget.PeakMonth -> onEvent(
+                                    ScanScreenEvent.OnLostSearchPeakMonthChanged(date),
+                                )
+                                LostSearchDateTarget.QuietFrom -> onEvent(
+                                    ScanScreenEvent.OnLostSearchQuietFromChanged(date),
+                                )
+                                LostSearchDateTarget.QuietTo -> onEvent(
+                                    ScanScreenEvent.OnLostSearchQuietToChanged(date),
                                 )
                             }
                         }
@@ -289,15 +318,15 @@ private fun BoundarySection(
             Text(date?.let(::formatDate) ?: stringResource(Res.string.lost_search_pick_date))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(
+            LostSearchChip(
                 selected = exact,
                 onClick = { onExactChanged(true) },
-                label = { Text(stringResource(Res.string.lost_search_exact)) },
+                label = stringResource(Res.string.lost_search_exact),
             )
-            FilterChip(
+            LostSearchChip(
                 selected = !exact,
                 onClick = { onExactChanged(false) },
-                label = { Text(stringResource(Res.string.lost_search_approx)) },
+                label = stringResource(Res.string.lost_search_approx),
             )
             if (!exact) {
                 OutlinedButton(onClick = onMonthsClick) {
@@ -306,6 +335,126 @@ private fun BoundarySection(
             }
         }
     }
+}
+
+@Composable
+private fun PeakMonthSection(
+    state: ScanScreenState,
+    onEvent: (ScanScreenEvent) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            text = stringResource(Res.string.lost_search_peak_title),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+        )
+        OutlinedButton(
+            onClick = {
+                onEvent(ScanScreenEvent.OnLostSearchDatePickerOpen(LostSearchDateTarget.PeakMonth))
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(
+                state.lostSearchPeakMonth?.let(::formatMonth)
+                    ?: stringResource(Res.string.lost_search_peak_pick),
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            NumberField(
+                label = stringResource(Res.string.lost_search_peak_min_days),
+                value = state.lostSearchPeakMinDays,
+                onValueChange = { onEvent(ScanScreenEvent.OnLostSearchPeakMinDaysChanged(it)) },
+                modifier = Modifier.weight(1f),
+            )
+            NumberField(
+                label = stringResource(Res.string.lost_search_peak_max_days),
+                value = state.lostSearchPeakMaxDays,
+                onValueChange = { onEvent(ScanScreenEvent.OnLostSearchPeakMaxDaysChanged(it)) },
+                modifier = Modifier.weight(1f),
+            )
+        }
+        NumberField(
+            label = stringResource(Res.string.lost_search_peak_min_streak),
+            value = state.lostSearchPeakMinConsecutive,
+            onValueChange = { onEvent(ScanScreenEvent.OnLostSearchPeakMinConsecutiveChanged(it)) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+private fun LowActivitySection(
+    state: ScanScreenState,
+    onEvent: (ScanScreenEvent) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            text = stringResource(Res.string.lost_search_quiet_title),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+        )
+        LostSearchChip(
+            selected = state.lostSearchQuietEnabled,
+            onClick = { onEvent(ScanScreenEvent.OnLostSearchQuietToggle(!state.lostSearchQuietEnabled)) },
+            label = stringResource(Res.string.lost_search_quiet_toggle),
+        )
+        if (state.lostSearchQuietEnabled) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = {
+                        onEvent(
+                            ScanScreenEvent.OnLostSearchDatePickerOpen(LostSearchDateTarget.QuietFrom),
+                        )
+                    },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(
+                        state.lostSearchQuietFrom?.let(::formatMonth)
+                            ?: stringResource(Res.string.lost_search_quiet_from),
+                    )
+                }
+                OutlinedButton(
+                    onClick = {
+                        onEvent(
+                            ScanScreenEvent.OnLostSearchDatePickerOpen(LostSearchDateTarget.QuietTo),
+                        )
+                    },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(
+                        state.lostSearchQuietTo?.let(::formatMonth)
+                            ?: stringResource(Res.string.lost_search_quiet_to),
+                    )
+                }
+            }
+            NumberField(
+                label = stringResource(Res.string.lost_search_quiet_max),
+                value = state.lostSearchQuietMaxPerMonth,
+                onValueChange = { onEvent(ScanScreenEvent.OnLostSearchQuietMaxChanged(it)) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun NumberField(
+    label: String,
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedTextField(
+        value = if (value == 0) "" else value.toString(),
+        onValueChange = { input ->
+            onValueChange(input.filter { it.isDigit() }.take(2).toIntOrNull() ?: 0)
+        },
+        modifier = modifier,
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        label = { Text(label) },
+        textStyle = MaterialTheme.typography.bodySmall,
+    )
 }
 
 @Composable
@@ -344,15 +493,15 @@ private fun ExpectedDayRow(
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(
+                LostSearchChip(
                     selected = day.exact,
                     onClick = { onExactChanged(true) },
-                    label = { Text(stringResource(Res.string.lost_search_exact)) },
+                    label = stringResource(Res.string.lost_search_exact),
                 )
-                FilterChip(
+                LostSearchChip(
                     selected = !day.exact,
                     onClick = { onExactChanged(false) },
-                    label = { Text(stringResource(Res.string.lost_search_approx)) },
+                    label = stringResource(Res.string.lost_search_approx),
                 )
                 if (!day.exact) {
                     OutlinedTextField(
@@ -369,20 +518,46 @@ private fun ExpectedDayRow(
                 }
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                LostSearchChip(
+                    selected = day.drinkType == ExpectedDrinkType.Any,
+                    onClick = { onDrinkTypeChanged(ExpectedDrinkType.Any) },
+                    label = stringResource(Res.string.lost_search_any),
+                )
+                LostSearchChip(
                     selected = day.drinkType == ExpectedDrinkType.Full,
                     onClick = { onDrinkTypeChanged(ExpectedDrinkType.Full) },
-                    label = { Text(stringResource(Res.string.lost_search_many)) },
+                    label = stringResource(Res.string.lost_search_many),
                 )
-                FilterChip(
+                LostSearchChip(
                     selected = day.drinkType == ExpectedDrinkType.Half,
                     onClick = { onDrinkTypeChanged(ExpectedDrinkType.Half) },
-                    label = { Text(stringResource(Res.string.lost_search_half)) },
+                    label = stringResource(Res.string.lost_search_half),
                 )
             }
         }
     }
+}
+
+@Composable
+private fun LostSearchChip(
+    selected: Boolean,
+    onClick: () -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = { Text(label) },
+        modifier = modifier,
+        colors = FilterChipDefaults.filterChipColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            selectedContainerColor = MaterialTheme.colorScheme.primary,
+            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+        ),
+    )
 }
 
 @Composable
@@ -412,6 +587,16 @@ private fun FoundCollectionCard(collection: FoundCollection) {
                 ),
                 style = MaterialTheme.typography.bodySmall,
             )
+            if (collection.peakDrinkDays > 0) {
+                Text(
+                    text = stringResource(
+                        Res.string.lost_search_peak_result,
+                        collection.peakDrinkDays,
+                        collection.maxConsecutiveDays,
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
         }
     }
 }
@@ -453,6 +638,9 @@ private fun MonthsDialog(
 
 private fun formatDate(date: LocalDate): String =
     "${date.day}.${date.month.ordinal + 1}.${date.year}"
+
+private fun formatMonth(date: LocalDate): String =
+    "${date.month.ordinal + 1}.${date.year}"
 
 private fun LocalDate.toUtcMillis(): Long =
     atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
