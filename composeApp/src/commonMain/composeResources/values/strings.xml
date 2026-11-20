@@ -20,6 +20,12 @@
     <string name="delete_all_title">Delete All Inactive Users</string>
     <string name="delete_all_message">Are you sure you want to delete %1$d inactive users? A backup will be created before deletion.</string>
     <string name="delete_all">Delete All</string>
+    <string name="delete_failed_title">Could not delete: %1$d</string>
+    <string name="delete_failed_message">These users remain in the list. You can retry deletion.</string>
+    <string name="delete_failed_retry">Retry</string>
+    <string name="delete_failed_export">Export list</string>
+    <string name="delete_failed_exported">List saved to: %1$s</string>
+    <string name="delete_failed_export_error">Could not save the file.</string>
     <string name="cancel">Cancel</string>
 
     <string name="delete_user_title">Delete User</string>
@@ -28,7 +34,9 @@
 
     <string name="daily_limit_reached">Daily read limit reached (%1$d). Try again tomorrow.</string>
     <string name="scan_complete">Scan complete. Found %1$d inactive users.</string>
-    <string name="all_deleted">All inactive users deleted.</string>
+    <string name="scan_stopped">Scan stopped. Progress saved.</string>
+    <string name="all_deleted">Deleted %1$d inactive users.</string>
+    <string name="delete_partial">Deleted %1$d of %2$d inactive users. Failures: %3$d.</string>
     <string name="user_deleted">User %1$s deleted.</string>
     <string name="firebase_initialized">Firebase initialized successfully.</string>
     <string name="firebase_init_failed">Failed to initialize Firebase.</string>

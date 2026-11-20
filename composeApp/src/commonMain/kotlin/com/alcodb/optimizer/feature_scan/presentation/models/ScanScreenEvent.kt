@@ -14,6 +14,9 @@ sealed interface ScanScreenEvent {
     data object OnDeleteAllClick : ScanScreenEvent
     data object OnDeleteAllConfirm : ScanScreenEvent
     data object OnDeleteAllDismiss : ScanScreenEvent
+    data object OnDeleteFailedDismiss : ScanScreenEvent
+    data object OnDeleteFailedRetry : ScanScreenEvent
+    data object OnDeleteFailedExport : ScanScreenEvent
     data class OnUserClick(val user: InactiveUser) : ScanScreenEvent
     data object OnUserDetailDismiss : ScanScreenEvent
     data object OnUserDetailToggleAllDates : ScanScreenEvent

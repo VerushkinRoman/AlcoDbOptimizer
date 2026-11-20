@@ -8,6 +8,7 @@ import com.alcodb.optimizer.common.domain.utils.Error
 import com.alcodb.optimizer.common.domain.utils.Result
 import com.alcodb.optimizer.feature_scan.data.datasource.ScanDataSource
 import com.alcodb.optimizer.feature_scan.domain.models.BackupEntry
+import com.alcodb.optimizer.feature_scan.domain.models.DeleteAllResult
 import com.alcodb.optimizer.feature_scan.domain.models.InactiveUser
 import com.alcodb.optimizer.feature_scan.domain.models.LostDataSearchCriteria
 import com.alcodb.optimizer.feature_scan.domain.models.LostDataSearchResult
@@ -84,10 +85,14 @@ class ScanRepositoryImpl(
 
     override suspend fun stopScan(): EmptyResult<Error> = runner.stopScan()
 
-    override suspend fun deleteAllInactiveUsers(): EmptyResult<Error> = deletion.deleteAllInactiveUsers()
+    override suspend fun deleteAllInactiveUsers(): Result<DeleteAllResult, Error> =
+        deletion.deleteAllInactiveUsers()
 
     override suspend fun deleteUser(userId: String, isAnonymous: Boolean): EmptyResult<Error> =
         deletion.deleteUser(userId, isAnonymous)
+
+    override suspend fun exportFailedUsers(users: List<InactiveUser>): Result<String, Error> =
+        deletion.exportFailedUsers(users)
 
     override suspend fun refreshInactiveUsers(): EmptyResult<Error> = runner.refreshInactiveUsers()
 

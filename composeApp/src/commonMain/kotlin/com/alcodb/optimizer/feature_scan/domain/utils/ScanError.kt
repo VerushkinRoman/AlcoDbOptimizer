@@ -9,5 +9,7 @@ enum class ScanError : Error {
     FailedToLoadProgress,
     FailedToSaveProgress,
     DailyLimitReached,
+    ScanStopped,
     NoDataAvailable,
+    FailedToExportUsers,
 }

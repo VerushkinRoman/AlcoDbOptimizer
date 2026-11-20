@@ -53,6 +53,11 @@ private fun KotlinMultiplatformExtension.configureDependencies() {
         jvmMain.get().dependsOn(jvmSharedMain)
         androidMain.get().dependsOn(jvmSharedMain)
 
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+            implementation(libs.kotlinx.coroutines.test)
+        }
+
         commonMain.dependencies {
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)

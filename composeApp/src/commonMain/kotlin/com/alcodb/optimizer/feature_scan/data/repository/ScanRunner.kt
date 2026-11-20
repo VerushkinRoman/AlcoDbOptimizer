@@ -16,6 +16,9 @@ import com.alcodb.optimizer.feature_scan.domain.models.RegistryData
 import com.alcodb.optimizer.feature_scan.domain.repository.ScanProgressState
 import com.alcodb.optimizer.feature_scan.domain.utils.ScanError
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.TimeZone
@@ -35,7 +38,15 @@ internal class ScanRunner(
     private val collections: CollectionsProvider,
     private val detector: InactiveUserDetector,
 ) {
-    suspend fun startScan(maxReads: Int): EmptyResult<Error> = withContext(dispatchers.io) {
+    private val scanMutex = Mutex()
+    private val stopRequested = MutableStateFlow(false)
+
+    suspend fun startScan(maxReads: Int): EmptyResult<Error> = scanMutex.withLock {
+        startScanLocked(maxReads)
+    }
+
+    private suspend fun startScanLocked(maxReads: Int): EmptyResult<Error> = withContext(dispatchers.io) {
+        stopRequested.value = false
         val effectiveMaxReads = maxReads.coerceAtLeast(1)
         try {
             if (!firestoreDataSource.isInitialized()) {
@@ -90,6 +101,21 @@ internal class ScanRunner(
             )
 
             for ((index, collectionId) in userCollections.withIndex()) {
+                if (stopRequested.value) {
+                    println(
+                        "[Scan] Stopped by user after ${processedSet.size} collections, " +
+                            "reads: $readsUsed, inactive: ${results.size}",
+                    )
+                    state.persistProgress(processedSet, results, readsUsed, today)
+                    state.progress = state.progress.copy(
+                        isScanning = false,
+                        collectionsProcessed = processedSet.size,
+                        readsUsed = readsUsed,
+                        isComplete = false,
+                    )
+                    return@withContext Result.Error(ScanError.ScanStopped)
+                }
+
                 if (collectionId in processedSet) continue
 
                 if (readsUsed >= effectiveMaxReads) {
@@ -186,6 +212,7 @@ internal class ScanRunner(
     }
 
     suspend fun stopScan(): EmptyResult<Error> = withContext(dispatchers.io) {
+        stopRequested.value = true
         state.progress = state.progress.copy(isScanning = false)
         EmptySuccessResult
     }

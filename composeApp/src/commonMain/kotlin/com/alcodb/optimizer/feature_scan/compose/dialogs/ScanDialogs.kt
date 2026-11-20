@@ -80,6 +80,80 @@ if (state.isDeleteAllConfirmVisible) {
 }
 
 @Composable
+internal fun DeleteFailedDialog(
+    state: ScanScreenState,
+    onEvent: (ScanScreenEvent) -> Unit,
+) {
+    if (!state.isDeleteFailedDialogVisible) return
+
+    AlertDialog(
+        onDismissRequest = { onEvent(ScanScreenEvent.OnDeleteFailedDismiss) },
+        title = {
+            Text(stringResource(Res.string.delete_failed_title, state.failedDeletionUsers.size))
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = stringResource(Res.string.delete_failed_message),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 400.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    items(state.failedDeletionUsers) { user ->
+                        Text(
+                            text = user.id,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = { onEvent(ScanScreenEvent.OnDeleteFailedExport) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(Res.string.delete_failed_export))
+                }
+                if (state.exportedFailedUsersPath != null) {
+                    Text(
+                        text = stringResource(
+                            Res.string.delete_failed_exported,
+                            state.exportedFailedUsersPath,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                if (state.failedUsersExportError) {
+                    Text(
+                        text = stringResource(Res.string.delete_failed_export_error),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onEvent(ScanScreenEvent.OnDeleteFailedRetry) }) {
+                Text(stringResource(Res.string.delete_failed_retry))
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = { onEvent(ScanScreenEvent.OnDeleteFailedDismiss) }) {
+                Text(stringResource(Res.string.close))
+            }
+        },
+    )
+}
+
+@Composable
 internal fun DeleteSingleConfirmDialog(
     state: ScanScreenState,
     onEvent: (ScanScreenEvent) -> Unit,

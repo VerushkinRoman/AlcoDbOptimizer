@@ -20,6 +20,12 @@
     <string name="delete_all_title">Удалить всех неактивных пользователей</string>
     <string name="delete_all_message">Вы уверены, что хотите удалить %1$d неактивных пользователей? Бэкап будет создан перед удалением.</string>
     <string name="delete_all">Удалить всех</string>
+    <string name="delete_failed_title">Не удалось удалить: %1$d</string>
+    <string name="delete_failed_message">Эти пользователи остались в списке. Можно повторить попытку.</string>
+    <string name="delete_failed_retry">Повторить</string>
+    <string name="delete_failed_export">Экспорт списка</string>
+    <string name="delete_failed_exported">Список сохранён: %1$s</string>
+    <string name="delete_failed_export_error">Не удалось сохранить файл.</string>
     <string name="cancel">Отмена</string>
 
     <string name="delete_user_title">Удалить пользователя</string>
@@ -28,7 +34,9 @@
 
     <string name="daily_limit_reached">Дневной лимит чтений достигнут (%1$d). Попробуйте завтра.</string>
     <string name="scan_complete">Сканирование завершено. Найдено %1$d неактивных пользователей.</string>
-    <string name="all_deleted">Все неактивные пользователи удалены.</string>
+    <string name="scan_stopped">Сканирование остановлено. Прогресс сохранён.</string>
+    <string name="all_deleted">Удалено неактивных пользователей: %1$d.</string>
+    <string name="delete_partial">Удалено %1$d из %2$d неактивных пользователей. Ошибок: %3$d.</string>
     <string name="user_deleted">Пользователь %1$s удалён.</string>
     <string name="firebase_initialized">Firebase успешно инициализирован.</string>
     <string name="firebase_init_failed">Ошибка инициализации Firebase.</string>

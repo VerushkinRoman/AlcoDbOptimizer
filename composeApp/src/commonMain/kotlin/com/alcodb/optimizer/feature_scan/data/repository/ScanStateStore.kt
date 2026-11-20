@@ -68,6 +68,7 @@ internal class ScanStateStore(
         readsUsed: Int,
         today: Long,
     ) {
+        inactiveUsers = users
         localStorageDataSource.setProcessedCollections(json.encodeToString(processed.toList()))
             .onError { println("[Scan] Failed to persist processed collections: $it") }
         localStorageDataSource.setInactiveUsers(json.encodeToString(users))
